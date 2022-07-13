@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reach UI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg bg-light">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">Reach UI</a>
+        </div>
+    </nav>
+    <div class="container-fluid mt-3">
+        <form>
+            <div class="mb-3">
+                <label for="providerList" class="form-label">Select a provider:</label>
+                <select id="providerList" class="form-select" aria-label="">
+                    <option selected>Open this select menu</option>
+                    <option value="1">One</option>
+                    <option value="2">Two</option>
+                    <option value="3">Three</option>
+                  </select>
+            </div>
+            <span id="parameters">
+                <div class="mb-3">
+                    <label for="exampleInputEmail1" class="form-label">Email address</label>
+                    <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                    <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="exampleInputPassword1" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="exampleInputPassword1">
+                  </div>
+                  <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="exampleCheck1">
+                    <label class="form-check-label" for="exampleCheck1">Check me out</label>
+                  </div>
+            </span>
+            <button type="Send" class="btn btn-primary">Send Notification</button>
+          </form>
+      </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            loadProviders();
+
+            $("#providerList").change (function () { 
+                var providerName = $(this).find(':selected').text();
+                loadParameters(providerName);
+            });
+
+            function loadProviders() {
+                // Download the list of notification providers
+                $.ajax({
+                        type: "GET",
+                        url: "http://localhost:8001/api/v1/notifications",
+                        dataType: "json",
+                        success: function (result, status, xhr) {
+                            $('#providerList')
+                                .empty()
+                                .append('<option value=""></option>');
+
+                            result.forEach(element => {
+                                $('#providerList')
+                                    .append('<option value="' + element + '">' + element + '</option>');
+                            });                      
+                        },
+                        error: function (xhr, status, error) {
+                            alert("Result: " + status + " " + error + " " + xhr.status + " " + xhr.statusText)
+                        }
+                    });
+            }
+
+            function loadParameters(providerName) {
+                $.ajax({
+                        type: "GET",
+                        url: "http://localhost:8001/api/v1/notifications/" + providerName,
+                        dataType: "json",
+                        success: function (result, status, xhr) {
+                            console.log(result);    
+                        },
+                        error: function (xhr, status, error) {
+                            alert("Result: " + status + " " + error + " " + xhr.status + " " + xhr.statusText)
+                        }
+                    });
+            }
+            
+
+        });
+        
+
+            
+        </script>
+  </body>
+</html>
