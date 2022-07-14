@@ -13,9 +13,14 @@ router.get("/notifications/:provider", async (request, response) => {
 });
 
 router.post("/notifications/:provider/send", async (request, response) => {
-    var notification = request.body;
-    notification.name = request.params.provider;
-    response.json(Reach.send(notification));
+    try {
+        var notification = request.body;
+        notification.name = request.params.provider;
+        var output = await Reach.send(notification);
+        response.json(output);
+    } catch (err) {
+        response.json(err);
+    }
 });
 
 module.exports = router;
