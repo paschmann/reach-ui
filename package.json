@@ -23,7 +23,7 @@
     "express": "^4.18.1",
     "http": "^0.0.1-security",
     "nodemon": "^2.0.19",
-    "reach-sdk": "^1.0.0",
+    "reach-sdk": "latest",
     "request": "^2.88.2"
   }
 }

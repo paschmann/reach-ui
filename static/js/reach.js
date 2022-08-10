@@ -3,6 +3,9 @@ $(document).ready(function () {
     // On load
     loadProviders();
 
+    // Configure "Copy code" button
+    setupCopyCode();
+
     // Click and change functions
     $("#providerList").change(function () {
         var providerName = $(this).find(':selected').text();
@@ -14,8 +17,7 @@ $(document).ready(function () {
 
         var notification = {
             required: {},
-            optional: {},
-            runtime: {}
+            optional: {}
         };
         $('#inputsRequired *').filter(':input').each(function () {
             if (!$(this).val()) {
@@ -25,6 +27,7 @@ $(document).ready(function () {
                 notification.required[$(this).attr('id')] = $(this).val();
             }
         });
+
         $('#inputsOptional *').filter(':input').each(function () {
             notification.optional[$(this).attr('id')] = $(this).val();
         });
@@ -42,6 +45,18 @@ $(document).ready(function () {
                 showResult("Error: " + status + " " + error + " " + xhr.status + " " + xhr.statusText);
             }
         });
+
+        var example_notification = notification;
+        example_notification.name = providerName;
+
+        var code = "<br />const { Reach } = require('reach-sdk');";
+        code += "<br />Reach.init();"
+        code += "<br /><br />var notification = {};"
+        code += "<br />notification = " + JSON.stringify(example_notification) + ";";
+
+        code += "<br /><br />console.log(Reach.send(notification));";
+
+        $('#code').html(code);
     });
 
     function loadProviders() {
@@ -101,7 +116,36 @@ $(document).ready(function () {
         var html = "<div class='alert alert-primary mt-3' role='alert'>";
         html += message
         html += "</div>";
-        $('#result').html(html)
+        $('#result').html(html);
+    }
+
+    function setupCopyCode() {
+        const copyButtonLabel = "Copy Code";
+        let blocks = document.querySelectorAll("#precode");
+
+        blocks.forEach((block) => {
+            // only add button if browser supports Clipboard API
+            if (navigator.clipboard) {
+                let button = document.createElement("button");
+                button.innerText = copyButtonLabel;
+                button.addEventListener("click", copyCode);
+                block.appendChild(button);
+            }
+        });
+
+        async function copyCode(event) {
+            const button = event.srcElement;
+            const pre = button.parentElement;
+            let code = pre.querySelector("code");
+            let text = code.innerText;
+            await navigator.clipboard.writeText(text);
+
+            button.innerText = "Code Copied";
+
+            setTimeout(() => {
+                button.innerText = copyButtonLabel;
+            }, 1000)
+        }
     }
 
 });

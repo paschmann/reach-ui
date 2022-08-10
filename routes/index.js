@@ -4,6 +4,11 @@ var express = require('express');
 var router = express.Router();
 Reach.init();
 
+router.post("/webhook", async (request, response) => {
+    console.log(request.body);
+    response.json("Receieved");
+});
+
 router.get("/notifications", async (request, response) => {
     response.json(Reach.listProviders());
 });
