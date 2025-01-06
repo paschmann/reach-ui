@@ -8,46 +8,96 @@ $(document).ready(function () {
 
     // Click and change functions
     $("#providerList").change(function () {
-        var providerName = $(this).find(':selected').text();
+        var providerName = getProviderName();
         loadParameters(providerName);
     });
 
-    $('#send').on("click", function () {
-        var providerName = $("#providerList").find(':selected').text();
+    $('#genCode').on("click", function () {
+        generateCodeExample();
+    });
 
+    $('#parseNotificationCode').on("click", function () {
+        try {
+            var code = prompt('This function will prepopulate the notification fields if you have a previously created notification string. E.g.: {"required":{"slackwebhookURL":"https://www.myslackinstance.com/webhook","text":"Test"},"optional":{},"name":"slack"}; Please enter the string to parse.');
+            var codeJSON = JSON.parse(code);
+
+            $('#inputsRequired *').filter(':input').each(function () {
+                console.log($(this).attr('id'));
+                $(this).val(codeJSON.required[$(this).attr('id')]);
+            });
+
+            $('#inputsOptional *').filter(':input').each(function () {
+                console.log($(this).attr('id'));
+                $(this).val(codeJSON.optional[$(this).attr('id')]);
+            });
+            scrollToTop();
+
+        } catch (err) {
+            console.log(err);
+        }
+    });
+
+    $('#send').on("click", function () {
+        try {
+            $('#inputsRequired *').filter(':input').each(function () {
+                if (!$(this).val()) {
+                    showResult("Complete required fields");
+                    scrollToTop();
+                    throw "Complete required fields"
+                }
+            });
+
+            var notification = getNotificationObject();
+            var providerName = getProviderName();
+            generateCodeExample();
+
+            $.ajax({
+                type: "POST",
+                url: "http://localhost:8001/api/v1/notifications/" + providerName + "/send",
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(notification),
+                success: function (result, status, xhr) {
+                    showResult(JSON.stringify(result));
+                },
+                error: function (xhr, status, error) {
+                    showResult("Error: " + status + " " + error + " " + xhr.status + " " + xhr.statusText);
+                }
+            });
+
+            scrollToTop();
+        } catch (err) {
+            console.log(err);
+        }
+    });
+
+    function scrollToTop() {
+        window.scrollTo(0, 0);
+    }
+
+    function getProviderName() {
+        return $("#providerList").find(':selected').text();
+    }
+
+    function getNotificationObject() {
         var notification = {
             required: {},
             optional: {}
         };
         $('#inputsRequired *').filter(':input').each(function () {
-            if (!$(this).val()) {
-                showResult("Complete required fields");
-                exit();
-            } else {
-                notification.required[$(this).attr('id')] = $(this).val();
-            }
+            notification.required[$(this).attr('id')] = $(this).val();
         });
 
         $('#inputsOptional *').filter(':input').each(function () {
             notification.optional[$(this).attr('id')] = $(this).val();
         });
 
-        $.ajax({
-            type: "POST",
-            url: "http://localhost:8001/api/v1/notifications/" + providerName + "/send",
-            dataType: "json",
-            contentType: "application/json; charset=utf-8",
-            data: JSON.stringify(notification),
-            success: function (result, status, xhr) {
-                showResult(JSON.stringify(result));
-            },
-            error: function (xhr, status, error) {
-                showResult("Error: " + status + " " + error + " " + xhr.status + " " + xhr.statusText);
-            }
-        });
+        return notification;
+    }
 
-        var example_notification = notification;
-        example_notification.name = providerName;
+    function generateCodeExample() {
+        var example_notification = getNotificationObject();
+        example_notification.name = getProviderName();
 
         var code = "<br />const { Reach } = require('reach-sdk');";
         code += "<br />Reach.init();"
@@ -57,10 +107,10 @@ $(document).ready(function () {
         code += "<br /><br />console.log(Reach.send(notification));";
 
         $('#code').html(code);
-    });
+    }
 
     function loadProviders() {
-        // Download the list of notification providers
+        // Download the list of notification providers, optional notification included to prepopulate fields
         $.ajax({
             type: "GET",
             url: "http://localhost:8001/api/v1/notifications",
@@ -117,6 +167,7 @@ $(document).ready(function () {
         html += message
         html += "</div>";
         $('#result').html(html);
+        scrollToTop();
     }
 
     function setupCopyCode() {
